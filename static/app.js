@@ -7,18 +7,27 @@ const input = document.querySelector("#message-input");
 const sendButton = document.querySelector("#send-button");
 let selectedAssistant = "general";
 let assistants = [];
+let history = [];
 
 async function loadWorkspace() {
   try {
-    const [assistantResponse, pluginResponse] = await Promise.all([
+    const [assistantResponse, pluginResponse, healthResponse] = await Promise.all([
       fetch("/api/assistants"),
       fetch("/api/plugins"),
+      fetch("/api/health"),
     ]);
-    if (!assistantResponse.ok || !pluginResponse.ok) throw new Error("Could not load workspace");
+    if (!assistantResponse.ok || !pluginResponse.ok || !healthResponse.ok) throw new Error("Could not load workspace");
     assistants = await assistantResponse.json();
     const plugins = await pluginResponse.json();
+    const health = await healthResponse.json();
     renderAssistants();
     renderPlugins(plugins);
+    const status = document.querySelector("#status-label");
+    status.textContent = health.ai_configured ? "AI connected" : "Local mode";
+    status.classList.toggle("connected", health.ai_configured);
+    document.querySelector("#composer-hint").textContent = health.ai_configured
+      ? "Your conversation is sent to the configured AI provider."
+      : "Set OPENAI_API_KEY for AI chat · Tasks, calculator, and clock work locally";
   } catch (error) {
     addMessage("assistant", "I couldn't connect to the Open Jarvis server. Please refresh the page.");
     console.error(error);
@@ -47,6 +56,7 @@ function renderAssistants() {
       selectedAssistant = assistant.id;
       title.textContent = assistant.name;
       renderAssistants();
+      history = [];
       clearConversation();
     });
     assistantList.append(button);
@@ -75,7 +85,7 @@ function clearConversation() {
   const heading = document.createElement("h2");
   heading.textContent = `Chat with ${title.textContent}`;
   const copy = document.createElement("p");
-  copy.textContent = "Your conversation starts here. Try one of the enabled plugins.";
+  copy.textContent = "Your conversation starts here. Try a question or an enabled plugin.";
   welcome.append(heading, copy);
   conversation.append(welcome);
 }
@@ -119,11 +129,13 @@ form.addEventListener("submit", async (event) => {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assistant_id: selectedAssistant, message }),
+      body: JSON.stringify({ assistant_id: selectedAssistant, message, history: history.slice(-20) }),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || "The request failed.");
     addMessage("assistant", data.reply, data.plugin_used);
+    history.push({ role: "user", content: message }, { role: "assistant", content: data.reply });
+    history = history.slice(-20);
   } catch (error) {
     addMessage("assistant", error.message || "Something went wrong. Please try again.");
   } finally {

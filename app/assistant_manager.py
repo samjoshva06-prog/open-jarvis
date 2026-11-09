@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.plugin_base import Plugin, PluginManifest
+from app.ai_provider import OpenAICompatibleProvider, ProviderError
+from app.plugin_base import Plugin
 from app.plugins.calculator import CalculatorPlugin
 from app.plugins.clock import ClockPlugin
+from app.plugins.tasks import TaskPlugin
 
 
 @dataclass(frozen=True)
@@ -17,18 +19,19 @@ class Assistant:
 
 
 class AssistantManager:
-    """Stores assistant profiles and dispatches messages to allowed plugins."""
+    """Stores assistant profiles and dispatches messages to allowed plugins or AI."""
 
-    def __init__(self) -> None:
-        plugins: tuple[Plugin, ...] = (CalculatorPlugin(), ClockPlugin())
+    def __init__(self, provider: OpenAICompatibleProvider | None = None) -> None:
+        plugins: tuple[Plugin, ...] = (CalculatorPlugin(), ClockPlugin(), TaskPlugin())
         self.plugins: dict[str, Plugin] = {plugin.manifest.id: plugin for plugin in plugins}
+        self.provider = provider or OpenAICompatibleProvider()
         self.assistants: dict[str, Assistant] = {
             "general": Assistant(
                 id="general",
                 name="Jarvis",
                 description="A general-purpose assistant for everyday questions.",
                 instructions="Be helpful, clear, and honest about your capabilities.",
-                plugin_ids=("calculator", "clock"),
+                plugin_ids=("calculator", "clock", "tasks"),
             ),
             "developer": Assistant(
                 id="developer",
@@ -40,9 +43,9 @@ class AssistantManager:
             "planner": Assistant(
                 id="planner",
                 name="Work Planner",
-                description="A focused assistant for organizing work and time.",
-                instructions="Help break work into clear, actionable steps.",
-                plugin_ids=("clock",),
+                description="Help organize projects, tasks, and time.",
+                instructions="Help break work into clear, actionable steps. Use the tasks plugin for explicit task-list commands.",
+                plugin_ids=("clock", "tasks"),
             ),
         }
 
@@ -63,7 +66,9 @@ class AssistantManager:
             for plugin in self.plugins.values()
         ]
 
-    def respond(self, assistant_id: str, message: str) -> tuple[str, str | None]:
+    def respond(
+        self, assistant_id: str, message: str, history: list[dict[str, str]] | None = None
+    ) -> tuple[str, str | None]:
         assistant = self.assistants.get(assistant_id)
         if assistant is None:
             raise KeyError("Unknown assistant")
@@ -73,8 +78,19 @@ class AssistantManager:
             if plugin.matches(message):
                 return plugin.run(message), plugin_id
 
+        if self.provider.is_configured:
+            messages = [{"role": "system", "content": assistant.instructions}]
+            for item in (history or [])[-20:]:
+                if item.get("role") in ("user", "assistant") and isinstance(item.get("content"), str):
+                    messages.append({"role": item["role"], "content": item["content"][:4000]})
+            messages.append({"role": "user", "content": message})
+            try:
+                return self.provider.respond(messages), None
+            except ProviderError:
+                raise
+
         return (
-            f"{assistant.name} is ready to help. This starter version can use its enabled "
-            "plugins; connect a language-model provider to enable open-ended AI conversations.",
+            f"{assistant.name} is ready. Set OPENAI_API_KEY to enable AI conversations; "
+            "local calculator, clock, and task-list commands work without an API key.",
             None,
         )

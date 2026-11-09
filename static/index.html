@@ -16,24 +16,25 @@
         <div class="sidebar-bottom">
           <div class="section-label">AVAILABLE PLUGINS</div>
           <ul id="plugin-list" class="plugin-list"></ul>
-          <p class="version">Open-source assistant workspace · v0.1</p>
+          <p class="version">AI chat · Productivity plugins · v0.2</p>
         </div>
       </aside>
 
       <main class="main-panel">
         <header class="topbar">
           <div><p class="eyebrow">YOUR WORKSPACE</p><h1 id="assistant-title">Jarvis</h1></div>
-          <span class="status"><span class="status-dot"></span> Starter mode</span>
+          <span class="status"><span class="status-dot"></span><span id="status-label">Connecting</span></span>
         </header>
         <section id="conversation" class="conversation" aria-live="polite">
           <div class="welcome" id="welcome">
             <div class="welcome-icon">✦</div>
             <p class="eyebrow">OPEN JARVIS</p>
             <h2>How can I help you today?</h2>
-            <p>Choose an assistant and ask a question. Try a calculation or ask for the current time.</p>
+            <p>Ask a question, plan your work, or manage your personal task list.</p>
             <div class="suggestions">
               <button type="button" data-prompt="What is 12 * (3 + 4)?">Calculate something <span>↗</span></button>
-              <button type="button" data-prompt="What time is it in UTC?">Check the time <span>↗</span></button>
+              <button type="button" data-prompt="add task: prepare project plan">Add a task <span>↗</span></button>
+              <button type="button" data-prompt="list tasks">View tasks <span>↗</span></button>
             </div>
           </div>
         </section>
@@ -41,7 +42,7 @@
           <label class="sr-only" for="message-input">Message your assistant</label>
           <textarea id="message-input" rows="1" maxlength="4000" placeholder="Message your assistant..." required></textarea>
           <button id="send-button" type="submit" aria-label="Send message">↑</button>
-          <div class="composer-hint">Open Jarvis starter · Connect an AI provider for open-ended conversations</div>
+          <div id="composer-hint" class="composer-hint">Loading your workspace…</div>
         </form>
       </main>
     </div>
