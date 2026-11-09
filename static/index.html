@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10131c" />
+    <title>Open Jarvis</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="Open Jarvis home"><span class="brand-mark">J</span><span>Open Jarvis</span></a>
+        <div class="section-label">ASSISTANTS</div>
+        <nav id="assistant-list" class="assistant-list" aria-label="Assistants"></nav>
+        <div class="sidebar-bottom">
+          <div class="section-label">AVAILABLE PLUGINS</div>
+          <ul id="plugin-list" class="plugin-list"></ul>
+          <p class="version">Open-source assistant workspace · v0.1</p>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div><p class="eyebrow">YOUR WORKSPACE</p><h1 id="assistant-title">Jarvis</h1></div>
+          <span class="status"><span class="status-dot"></span> Starter mode</span>
+        </header>
+        <section id="conversation" class="conversation" aria-live="polite">
+          <div class="welcome" id="welcome">
+            <div class="welcome-icon">✦</div>
+            <p class="eyebrow">OPEN JARVIS</p>
+            <h2>How can I help you today?</h2>
+            <p>Choose an assistant and ask a question. Try a calculation or ask for the current time.</p>
+            <div class="suggestions">
+              <button type="button" data-prompt="What is 12 * (3 + 4)?">Calculate something <span>↗</span></button>
+              <button type="button" data-prompt="What time is it in UTC?">Check the time <span>↗</span></button>
+            </div>
+          </div>
+        </section>
+        <form id="chat-form" class="composer">
+          <label class="sr-only" for="message-input">Message your assistant</label>
+          <textarea id="message-input" rows="1" maxlength="4000" placeholder="Message your assistant..." required></textarea>
+          <button id="send-button" type="submit" aria-label="Send message">↑</button>
+          <div class="composer-hint">Open Jarvis starter · Connect an AI provider for open-ended conversations</div>
+        </form>
+      </main>
+    </div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
